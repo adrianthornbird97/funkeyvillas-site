@@ -337,3 +337,30 @@ p{margin:0 0 1.1em}
 .socials-dark a:hover{background:rgba(6,64,128,.07)}
 @media (max-width:860px){.brand-badge{height:40px}.site-header.solid .brand-badge,.no-hero .site-header .brand-badge{height:36px}.brand-words .wm{height:14px}.brand-tag{font-size:.82rem}}
 @media (max-width:380px){.brand-tag{display:none}}
+
+/* Instagram strip (static, no widget/API) */
+.ig-section{background:#f7f3ee}
+.ig-handles{margin:.5rem 0 0;font-size:.95rem;letter-spacing:.02em}
+.ig-handles a{color:var(--navy);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .2s}
+.ig-handles a:hover{border-bottom-color:currentColor}
+.ig-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:2.2rem}
+.ig-tile{position:relative;display:block;aspect-ratio:1/1;overflow:hidden;border-radius:4px;background:#e9e4dc}
+.ig-tile img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .8s var(--ease)}
+.ig-ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.55rem;color:#fff;background:rgba(3,28,58,.48);opacity:0;transition:opacity .35s var(--ease)}
+.ig-ov svg{width:30px;height:30px}
+.ig-ov em{font-family:var(--serif);font-style:italic;font-size:1.05rem}
+.ig-tile:hover img,.ig-tile:focus-visible img{transform:scale(1.05)}
+.ig-tile:hover .ig-ov,.ig-tile:focus-visible .ig-ov{opacity:1}
+.ig-cta{text-align:center;margin-top:2.2rem}
+.ig-btn{display:inline-flex;align-items:center;gap:.6rem}
+.ig-btn svg{width:18px;height:18px}
+@media (max-width:700px){
+ .ig-grid{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:10px;margin:1.6rem -20px 0;padding:0 20px 6px;scroll-padding-left:20px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+ .ig-grid::-webkit-scrollbar{display:none}
+ .ig-tile{flex:0 0 62%;scroll-snap-align:start}
+ .ig-ov{opacity:1;background:linear-gradient(to top,rgba(3,28,58,.6),transparent 50%);flex-direction:row;justify-content:flex-start;align-items:flex-end;gap:.4rem;padding:10px 12px}
+ .ig-ov svg{width:18px;height:18px}.ig-ov em{font-size:.95rem}
+}
+@media (prefers-reduced-motion:reduce){.ig-tile img{transition:none}}
+.ig-handles a{white-space:nowrap}
+@media (max-width:700px){.ig-handles{display:flex;flex-direction:column;gap:.25rem}.ig-handles .sep{display:none}}
