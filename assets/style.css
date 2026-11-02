@@ -41,9 +41,11 @@ p{margin:0 0 1.1em}
 /* Header */
 .site-header{position:fixed;inset:0 0 auto 0;z-index:50;transition:background .35s var(--ease),box-shadow .35s,padding .35s;padding:18px 0;color:#fff}
 .site-header.solid,.no-hero .site-header{background:rgba(255,255,255,.97);backdrop-filter:saturate(1.4) blur(8px);box-shadow:0 1px 0 var(--line);color:var(--ink);padding:10px 0}
-.site-header .wrap{display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.site-header .wrap{display:flex;align-items:center;justify-content:space-between;gap:1.5rem;flex-wrap:nowrap}
+.site-header .brand{flex:0 0 auto;min-width:0}
 .brand{display:flex;align-items:center;gap:.75rem;text-decoration:none;color:inherit}
-.nav{display:flex;align-items:center;gap:1.6rem}
+.nav{display:flex;align-items:center;gap:1.6rem;flex-wrap:nowrap}
+.nav a,.nav .btn{white-space:nowrap}
 .nav a{color:inherit;text-decoration:none;font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;font-weight:400;position:relative;padding:.3rem 0}
 .nav a::after{content:"";position:absolute;left:0;right:100%;bottom:0;height:1px;background:currentColor;transition:right .3s var(--ease)}
 .nav a:hover::after,.nav a[aria-current=page]::after{right:0}
@@ -51,7 +53,7 @@ p{margin:0 0 1.1em}
 .nav .btn::after{display:none}
 .nav-toggle{display:none;background:none;border:0;color:inherit;padding:8px;cursor:pointer}
 .nav-toggle span{display:block;width:26px;height:1.5px;background:currentColor;margin:6px 0;transition:transform .3s,opacity .3s}
-@media (max-width:1020px){
+@media (max-width:1180px){
   .nav-toggle{display:block;z-index:60}
   .nav{position:fixed;inset:0;background:var(--navy-dd);color:#fff;flex-direction:column;justify-content:center;gap:1.2rem;transform:translateX(100%);transition:transform .45s var(--ease);visibility:hidden}
   .nav a{font-family:var(--serif);font-size:1.7rem;letter-spacing:.04em;text-transform:none}
@@ -62,6 +64,8 @@ p{margin:0 0 1.1em}
   body.nav-open .nav-toggle span:nth-child(2){opacity:0}
   body.nav-open .nav-toggle span:nth-child(3){transform:translateY(-7.5px) rotate(-45deg)}
   body.nav-open{overflow:hidden}
+  body.nav-open .site-header{backdrop-filter:none;-webkit-backdrop-filter:none;background:transparent;box-shadow:none}
+  body.nav-open .site-header .brand{position:relative;z-index:61}
 }
 
 /* Hero */
@@ -83,11 +87,11 @@ p{margin:0 0 1.1em}
 
 /* Booking bar */
 .bookbar{position:relative;z-index:5;margin-top:-46px}
-.bookbar form{background:#fff;box-shadow:var(--shadow);border-radius:var(--r);display:grid;grid-template-columns:1.2fr 1fr 1fr .9fr auto;align-items:end;gap:0;padding:10px}
-.bookbar .f{padding:8px 16px;border-right:1px solid var(--line)}
+.bookbar form{background:#fff;box-shadow:var(--shadow);border-radius:var(--r);display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) minmax(0,1fr) minmax(0,.9fr) auto;align-items:end;gap:0;padding:10px}
+.bookbar .f{padding:8px 16px;border-right:1px solid var(--line);min-width:0}
 .bookbar .f:last-of-type{border-right:0}
 .bookbar label,.field label{display:block;font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--grey);font-weight:500;margin-bottom:4px}
-.bookbar input,.bookbar select{width:100%;border:0;font:inherit;font-size:1rem;color:var(--ink);background:transparent;padding:4px 0;min-height:34px}
+.bookbar input,.bookbar select{width:100%;min-width:0;max-width:100%;border:0;font:inherit;font-size:1rem;color:var(--ink);background:transparent;padding:4px 0;min-height:34px}
 .bookbar .btn{height:100%;min-height:60px}
 .bookbar .note{font-size:.8rem;color:var(--muted);margin:.7rem 4px 0;text-align:center}
 @media (max-width:860px){.bookbar{margin-top:-30px}.bookbar form{grid-template-columns:1fr 1fr}.bookbar .f{border-right:0;border-bottom:1px solid var(--line)}.bookbar .f-dest{grid-column:1/-1}.bookbar .btn{grid-column:1/-1;margin-top:8px}}
@@ -327,6 +331,7 @@ p{margin:0 0 1.1em}
 .socials-dark{margin-top:.8rem}
 .socials-dark a{border-color:var(--line);color:var(--navy)}
 .socials-dark a:hover{background:rgba(6,64,128,.07)}
+@media (min-width:1181px) and (max-width:1360px){.nav{gap:1.15rem}.nav a{letter-spacing:.1em}.lockup-rev{height:40px}.lockup-col{height:54px}}
 @media (max-width:860px){.lockup-rev{height:36px}.lockup-col{height:52px}.foot-logo{width:240px}}
 @media (max-width:360px){.lockup-rev{height:31px}.lockup-col{height:46px}}
 
@@ -356,3 +361,7 @@ p{margin:0 0 1.1em}
 @media (prefers-reduced-motion:reduce){.ig-tile img{transition:none}}
 .ig-handles a{white-space:nowrap}
 @media (max-width:700px){.ig-handles{display:flex;flex-direction:column;gap:.25rem}.ig-handles .sep{display:none}}
+
+/* never let decorative overhangs (intro inset photo, etc.) create sideways scroll */
+main{overflow-x:clip}
+@media (max-width:1300px){.intro-grid figure .inset{right:-2%}}
