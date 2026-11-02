@@ -1,0 +1,32 @@
+# Copy to .github/workflows/nb-availability.yml in the funkeyvillas-site repo (repo root = contents of site/).
+# Refreshes assets/data/availability.json from NightsBridge's public, read-only availability API every hour.
+# Read-only: it never logs into NightsBridge and never changes rates, settings or bookings. No prices are stored.
+name: Sync NightsBridge availability
+on:
+  schedule:
+    - cron: '17 * * * *'      # hourly at :17 (GitHub may delay scheduled runs at busy times)
+  workflow_dispatch: {}
+permissions:
+  contents: write
+concurrency:
+  group: nb-availability
+  cancel-in-progress: false
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch availability (stdlib only)
+        run: python3 tools/nb_availability.py --out assets/data/availability.json --heartbeat-hours 6
+      - name: Commit if changed
+        run: |
+          if git diff --quiet -- assets/data/availability.json; then echo "No change"; exit 0; fi
+          git config user.name  "availability-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/data/availability.json
+          git commit -m "Availability sync $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push
