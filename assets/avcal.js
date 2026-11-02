@@ -16,11 +16,19 @@
   function ago(h){if(h<1)return Math.max(1,Math.round(h*60))+' min ago';if(h<48)return Math.round(h)+' h ago';return Math.round(h/24)+' days ago'}
   function h(tag,cls,html){var e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e}
 
+  var cache={};  // one request per data file, even with several calendars on a page (home villa cards)
+  function load(src){return cache[src]||(cache[src]=fetch(src+'?t='+Math.floor(Date.now()/6e5),{cache:'no-cache'})
+      .then(function(r){if(!r.ok)throw new Error(r.status);return r.json()}))}
   Array.prototype.forEach.call(els,function(el){
-    fetch(el.getAttribute('data-src')+'?t='+Math.floor(Date.now()/6e5),{cache:'no-cache'})
-      .then(function(r){if(!r.ok)throw new Error(r.status);return r.json()})
+    load(el.getAttribute('data-src'))
       .then(function(d){render(el,d)})
       .catch(function(){el.classList.add('avcal-failed')});
+  });
+  // Home cards: the "Book direct" link carries the promo code typed in the home booking bar (Cape Town only).
+  Array.prototype.forEach.call(document.querySelectorAll('a[data-nb-book]'),function(a){
+    a.addEventListener('click',function(){var p=document.getElementById('bb-promo'),dst=document.querySelector('select[data-dest]');
+      if(!p||!p.value.trim()||(dst&&dst.value!=='cpt'))return;
+      try{var u=new URL(a.href);u.searchParams.set('promocode',p.value.trim());a.href=u.href}catch(e){}});
   });
 
   function render(el,d){
@@ -44,6 +52,7 @@
       return night?(morning?'free':'in'):(morning?'out':'booked');
     }
     var LBL={free:'available',in:'check-in only (booked until the morning)',out:'check-out only (booked from that night)',booked:'booked',past:'past',na:'not yet open for booking'};
+    if(el.hasAttribute('data-compact'))return compact();
     var s=null,e=null,hover=null;
 
     el.innerHTML='';el.classList.add('avcal-ready');
@@ -132,5 +141,45 @@
     function navState(){prev.disabled=track.scrollLeft<4;next.disabled=track.scrollLeft+track.clientWidth>=track.scrollWidth-4}
     track.addEventListener('scroll',navState,{passive:true});window.addEventListener('resize',navState);navState();
     paint();
+
+    // Compact mode (home villa cards): one month at a time, view only, always 6 week rows so cards stay the same height.
+    function compact(){
+      var name=el.getAttribute('data-name')||'this villa';
+      var first=add(start,t0),lastD=add(start,n-1);
+      var m0=Date.UTC(first.getUTCFullYear(),first.getUTCMonth(),1),months=[],mm=new Date(m0);
+      while(mm<=lastD){months.push(new Date(mm));mm=new Date(Date.UTC(mm.getUTCFullYear(),mm.getUTCMonth()+1,1))}
+      var cur=0,CL={free:'free',in:'free',out:'booked',booked:'booked',past:'past',na:'past'};
+      var TXT={free:'available',booked:'booked',past:'past'};
+      el.innerHTML='';el.classList.add('avcal-ready');
+      var head=h('div','avcal-chead');
+      var prev=h('button','avcal-cnav avcal-prev','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>');prev.type='button';
+      var next=h('button','avcal-cnav avcal-next','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>');next.type='button';
+      var title=h('p','avcal-ctitle');title.setAttribute('aria-live','polite');
+      head.appendChild(prev);head.appendChild(title);head.appendChild(next);el.appendChild(head);
+      var grid=h('div','avcal-grid avcal-cgrid');el.appendChild(grid);
+      var legend=h('ul','avcal-legend avcal-clegend','<li><i class="k k-free"></i>Available</li><li><i class="k k-booked"></i>Booked</li><li><i class="k k-past"></i>Past</li>');
+      el.appendChild(legend);
+      var info=h('p','avcal-info avcal-cinfo','Updated '+ago(ageH)+' · confirmed live when you book');
+      if(ageH>24){info.classList.add('avcal-stale');info.innerHTML='<strong>Heads-up:</strong> last synced '+ago(ageH)+', dates may have changed. Booking shows live availability.'}
+      el.appendChild(info);
+      function draw(){
+        var m=months[cur],y=m.getUTCFullYear(),mo=m.getUTCMonth(),label=MON[mo]+' '+y;
+        title.textContent=label;
+        prev.disabled=cur===0;next.disabled=cur===months.length-1;
+        prev.setAttribute('aria-label','Previous month'+(cur>0?' ('+MON[months[cur-1].getUTCMonth()]+')':''));
+        next.setAttribute('aria-label','Next month'+(cur<months.length-1?' ('+MON[months[cur+1].getUTCMonth()]+')':''));
+        grid.setAttribute('aria-label',name+' availability, '+label);grid.setAttribute('role','group');
+        var html=DOW.map(function(x){return '<span class="avcal-dow" aria-hidden="true">'+x.charAt(0)+'<span class="avcal-dow2">'+x.charAt(1)+'</span></span>'}).join('');
+        var lead=(m.getUTCDay()+6)%7,dim=new Date(Date.UTC(y,mo+1,0)).getUTCDate(),cells=0;
+        for(var k=0;k<lead;k++,cells++)html+='<span class="d d-blank"></span>';
+        for(var day=1;day<=dim;day++,cells++){var i=diff(start,new Date(Date.UTC(y,mo,day))),c=CL[status(i)]||'past';
+          html+='<span class="d s-'+c+'">'+day+'<span class="sr-only"> '+TXT[c]+'</span></span>'}
+        for(;cells<42;cells++)html+='<span class="d d-blank"></span>';
+        grid.innerHTML=html;
+      }
+      prev.addEventListener('click',function(){if(cur>0){cur--;draw()}});
+      next.addEventListener('click',function(){if(cur<months.length-1){cur++;draw()}});
+      draw();
+    }
   }
 })();
