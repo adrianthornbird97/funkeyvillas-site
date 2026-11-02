@@ -43,9 +43,6 @@ p{margin:0 0 1.1em}
 .site-header.solid,.no-hero .site-header{background:rgba(255,255,255,.97);backdrop-filter:saturate(1.4) blur(8px);box-shadow:0 1px 0 var(--line);color:var(--ink);padding:10px 0}
 .site-header .wrap{display:flex;align-items:center;justify-content:space-between;gap:1rem}
 .brand{display:flex;align-items:center;gap:.75rem;text-decoration:none;color:inherit}
-.brand-mark{width:42px;height:42px;border-radius:3px;background:var(--navy);display:grid;place-items:center;font-family:var(--serif);font-style:italic;font-size:1.35rem;color:#fff;letter-spacing:-.02em;box-shadow:0 0 0 1px rgba(255,255,255,.35) inset}
-.brand-text{font-family:var(--serif);font-size:1.45rem;font-weight:500;letter-spacing:.14em;text-transform:uppercase;line-height:1}
-.brand-text small{display:block;font-family:var(--sans);font-size:.58rem;letter-spacing:.32em;font-weight:400;opacity:.8;margin-top:5px}
 .nav{display:flex;align-items:center;gap:1.6rem}
 .nav a{color:inherit;text-decoration:none;font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;font-weight:400;position:relative;padding:.3rem 0}
 .nav a::after{content:"";position:absolute;left:0;right:100%;bottom:0;height:1px;background:currentColor;transition:right .3s var(--ease)}
@@ -268,7 +265,6 @@ p{margin:0 0 1.1em}
 .foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1.3fr;gap:40px}
 .site-footer h4{font-family:var(--sans);font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;color:#fff;font-weight:500;margin-bottom:1.1rem}
 .site-footer ul{list-style:none;padding:0;margin:0}.site-footer li{margin:.4rem 0}
-.foot-brand .brand-text{color:#fff}
 .newsletter{display:flex;gap:8px;margin-top:.8rem;flex-wrap:wrap}
 .newsletter input{flex:1 1 160px;min-width:0;padding:.75rem .9rem;border-radius:var(--r);border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.06);color:#fff;font:inherit}
 .newsletter input::placeholder{color:#93a4b8}
@@ -317,26 +313,22 @@ p{margin:0 0 1.1em}
 .unit-addr{display:flex;gap:.6rem;align-items:flex-start;margin:0 0 1.6rem;font-size:.95rem;color:var(--ink-2,#555)}
 .unit-addr svg{width:18px;height:18px;flex:none;margin-top:.15rem;color:var(--navy,#1F548F)}
 
-/* FV brand logo (Nov 2026) */
-.brand{gap:.8rem}
-.brand-badge{height:50px;width:auto;display:block;transition:height .35s var(--ease)}
-.brand-words{display:flex;flex-direction:column;gap:6px}
-.brand-words .wm{height:17px;width:auto;display:block}
-.brand-words .wm-dark{display:none}
-.site-header.solid .wm-light,.no-hero .site-header .wm-light{display:none}
-.site-header.solid .wm-dark,.no-hero .site-header .wm-dark{display:block}
-.site-header.solid .brand-badge,.no-hero .site-header .brand-badge{height:42px}
-.brand-tag{font-family:var(--serif);font-style:italic;font-size:.95rem;letter-spacing:.02em;line-height:1;opacity:.92}
-.site-header.solid .brand-tag,.no-hero .site-header .brand-tag{color:#82612f;opacity:1}
-.foot-brand .brand-badge{height:72px}
-.foot-brand .brand-words .wm{height:20px}
-.foot-brand .brand-tag{display:none}
-.foot-tag{font-family:var(--serif);font-style:italic;font-size:1.35rem;color:#f1dfc0;margin:1rem 0 0}
+/* Logo (Adrian's choice 2 Nov 2026): header = option C lockup, elsewhere = option B */
+.brand{gap:0}
+.lockup{display:block;width:auto}
+.lockup-rev{height:44px}
+.lockup-col{height:60px;display:none}
+.site-header.solid .lockup-rev,.no-hero .site-header .lockup-rev{display:none}
+.site-header.solid .lockup-col,.no-hero .site-header .lockup-col{display:block}
+.foot-logo{display:block;width:260px;height:auto}
+.logo-b{height:auto}
+.about-logo{display:block;width:220px;margin:0 0 1.6rem}
+.nf-logo{display:inline-block;width:260px;margin:0 auto 1rem}
 .socials-dark{margin-top:.8rem}
 .socials-dark a{border-color:var(--line);color:var(--navy)}
 .socials-dark a:hover{background:rgba(6,64,128,.07)}
-@media (max-width:860px){.brand-badge{height:40px}.site-header.solid .brand-badge,.no-hero .site-header .brand-badge{height:36px}.brand-words .wm{height:14px}.brand-tag{font-size:.82rem}}
-@media (max-width:380px){.brand-tag{display:none}}
+@media (max-width:860px){.lockup-rev{height:36px}.lockup-col{height:52px}.foot-logo{width:240px}}
+@media (max-width:360px){.lockup-rev{height:31px}.lockup-col{height:46px}}
 
 /* Instagram strip (static, no widget/API) */
 .ig-section{background:#f7f3ee}
