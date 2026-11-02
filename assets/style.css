@@ -316,3 +316,24 @@ p{margin:0 0 1.1em}
 .perks li.offer{color:#82612f}.perks li.offer strong{font-weight:600}
 .unit-addr{display:flex;gap:.6rem;align-items:flex-start;margin:0 0 1.6rem;font-size:.95rem;color:var(--ink-2,#555)}
 .unit-addr svg{width:18px;height:18px;flex:none;margin-top:.15rem;color:var(--navy,#1F548F)}
+
+/* FV brand logo (Nov 2026) */
+.brand{gap:.8rem}
+.brand-badge{height:50px;width:auto;display:block;transition:height .35s var(--ease)}
+.brand-words{display:flex;flex-direction:column;gap:6px}
+.brand-words .wm{height:17px;width:auto;display:block}
+.brand-words .wm-dark{display:none}
+.site-header.solid .wm-light,.no-hero .site-header .wm-light{display:none}
+.site-header.solid .wm-dark,.no-hero .site-header .wm-dark{display:block}
+.site-header.solid .brand-badge,.no-hero .site-header .brand-badge{height:42px}
+.brand-tag{font-family:var(--serif);font-style:italic;font-size:.95rem;letter-spacing:.02em;line-height:1;opacity:.92}
+.site-header.solid .brand-tag,.no-hero .site-header .brand-tag{color:#82612f;opacity:1}
+.foot-brand .brand-badge{height:72px}
+.foot-brand .brand-words .wm{height:20px}
+.foot-brand .brand-tag{display:none}
+.foot-tag{font-family:var(--serif);font-style:italic;font-size:1.35rem;color:#f1dfc0;margin:1rem 0 0}
+.socials-dark{margin-top:.8rem}
+.socials-dark a{border-color:var(--line);color:var(--navy)}
+.socials-dark a:hover{background:rgba(6,64,128,.07)}
+@media (max-width:860px){.brand-badge{height:40px}.site-header.solid .brand-badge,.no-hero .site-header .brand-badge{height:36px}.brand-words .wm{height:14px}.brand-tag{font-size:.82rem}}
+@media (max-width:380px){.brand-tag{display:none}}
