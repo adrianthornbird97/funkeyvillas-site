@@ -1,6 +1,8 @@
 /* Funkey Villas – per-villa availability calendar.
-   Data: assets/data/availability.json, synced from NightsBridge's public availability (no prices stored).
-   Selecting check-in + check-out fills the booking form and links to NightsBridge for that villa and those dates. */
+   Data: assets/data/availability.json, synced from NightsBridge's public availability (Camps Bay) and Lodgify's public
+   booking calendar (Villa Afrika, rooms["lodgify-607614"], which carries its own start/checked/tz). No prices stored.
+   Selecting check-in + check-out fills the booking form and links to NightsBridge (or Lodgify: data-book="lodgify")
+   for that villa and those dates. */
 (function(){
   'use strict';
   var els=document.querySelectorAll('[data-avcal]');if(!els.length||!window.fetch)return;
@@ -12,7 +14,7 @@
   function add(d,n){return new Date(d.getTime()+n*864e5)}
   function diff(a,b){return Math.round((b-a)/864e5)}
   function fmt(d,long){return (long?DOWL[d.getUTCDay()]+' ':'')+d.getUTCDate()+' '+MON[d.getUTCMonth()].slice(0,long?99:3)+(long?' '+d.getUTCFullYear():'')}
-  function todaySAST(){try{return new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Johannesburg',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())}catch(e){return iso(new Date(Date.now()+72e5))}}
+  function todaySAST(tz){try{return new Intl.DateTimeFormat('en-CA',{timeZone:tz||'Africa/Johannesburg',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())}catch(e){return iso(new Date(Date.now()+72e5))}}
   function ago(h){if(h<1)return Math.max(1,Math.round(h*60))+' min ago';if(h<48)return Math.round(h)+' h ago';return Math.round(h/24)+' days ago'}
   function h(tag,cls,html){var e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e}
 
@@ -34,9 +36,10 @@
   function render(el,d){
     var rtid=el.getAttribute('data-rtid'),nb=el.getAttribute('data-nb'),room=d.rooms&&d.rooms[rtid];
     if(!room)return el.classList.add('avcal-failed');
-    var ageH=(Date.now()-Date.parse(d.checked))/36e5;
+    var lg=el.getAttribute('data-book')==='lodgify',sys=lg?'Lodgify':'NightsBridge';
+    var ageH=(Date.now()-Date.parse(room.checked||d.checked))/36e5;
     if(!(ageH<24*7))return el.classList.add('avcal-failed','avcal-old');  // never show a calendar that is more than a week out of date
-    var start=parse(d.start),n=room.free.length,today=parse(todaySAST()),t0=Math.max(0,diff(start,today));
+    var start=parse(room.start||d.start),n=room.free.length,today=parse(todaySAST(room.tz)),t0=Math.max(0,diff(start,today));
     if(t0>=n-1)return el.classList.add('avcal-failed','avcal-old');
     var F=room.free,MS=room.minstay||[],NA=room.noarr||'',ND=room.nodep||'';
     function free(i){return i>=0&&i<n&&F.charAt(i)==='1'}
@@ -52,6 +55,9 @@
       return night?(morning?'free':'in'):(morning?'out':'booked');
     }
     var LBL={free:'available',in:'check-in only (booked until the morning)',out:'check-out only (booked from that night)',booked:'booked',past:'past',na:'not yet open for booking'};
+    // data-open="first-free" (Villa Afrika: winter closure): open on the first month that has a free night, from the data.
+    // Without it (Camps Bay) the calendar opens on the current month. The prev arrow still goes back to the current month.
+    var openAt=null;if(el.getAttribute('data-open')==='first-free'){for(var z=t0;z<n;z++)if(free(z)){openAt=add(start,z);break}}
     if(el.hasAttribute('data-compact'))return compact();
     var s=null,e=null,hover=null;
 
@@ -95,7 +101,7 @@
     var cnt={},mx=0;for(var q=t0;q<n;q++){if(free(q)&&MS[q]){cnt[MS[q]]=(cnt[MS[q]]||0)+1;mx=Math.max(mx,MS[q])}}
     var mode=0,best=-1;for(var key in cnt){if(cnt[key]>best){best=cnt[key];mode=+key}}
     var info=h('p','avcal-info',(mode>1?'Minimum stay '+mode+' nights'+(mx>mode?' ('+mx+' on some peak dates)':'')+'. ':'')+
-      'Synced with our NightsBridge booking system, last updated '+ago(ageH)+'. Your dates are confirmed live on the secure booking page.');
+      'Synced with our '+sys+' booking system, last updated '+ago(ageH)+'. Your dates are confirmed live on the secure booking page.');
     if(ageH>24)info.classList.add('avcal-stale'),info.innerHTML='<strong>Heads-up:</strong> this calendar was last synced '+ago(ageH)+', so some dates may have changed. The secure booking page always shows live availability.';
     el.appendChild(info);
 
@@ -118,7 +124,9 @@
         msg.innerHTML='<strong>'+fmt(a)+' – '+fmt(b)+' '+b.getUTCFullYear()+'</strong> · '+nn+' night'+(nn>1?'s':'');
         foot.classList.add('has-stay');
         var form=document.querySelector('#book form[data-dates]'),promo=form&&form.querySelector('[name=promocode]');
-        book.href=nb+'?rtid='+encodeURIComponent(rtid)+'&startdate='+iso(a)+'&enddate='+iso(b)+(promo&&promo.value?'&promocode='+encodeURIComponent(promo.value):'');
+        if(lg){var ad=form&&form.querySelector('[name=adults]');
+          book.href=nb+'?currency=EUR&arrival='+iso(a)+'&departure='+iso(b)+'&adults='+encodeURIComponent(ad&&ad.value||2);}
+        else book.href=nb+'?rtid='+encodeURIComponent(rtid)+'&startdate='+iso(a)+'&enddate='+iso(b)+(promo&&promo.value?'&promocode='+encodeURIComponent(promo.value):'');
         if(form){var fi=form.querySelector('[data-start]'),fo=form.querySelector('[data-end]');
           if(fi&&fo){fi.value=iso(a);fi.dispatchEvent(new Event('change'));fo.value=iso(b);fo.min=iso(add(a,1));}}
       }
@@ -139,7 +147,10 @@
     prev.addEventListener('click',function(){track.scrollBy({left:-step(),behavior:'smooth'})});
     next.addEventListener('click',function(){track.scrollBy({left:step(),behavior:'smooth'})});
     function navState(){prev.disabled=track.scrollLeft<4;next.disabled=track.scrollLeft+track.clientWidth>=track.scrollWidth-4}
-    track.addEventListener('scroll',navState,{passive:true});window.addEventListener('resize',navState);navState();
+    track.addEventListener('scroll',navState,{passive:true});window.addEventListener('resize',navState);
+    if(openAt){var oi=(openAt.getUTCFullYear()-first.getUTCFullYear())*12+openAt.getUTCMonth()-first.getUTCMonth(),om=track.querySelectorAll('.avcal-month')[oi];
+      if(om&&oi>0){var sb=track.style.scrollBehavior;track.style.scrollBehavior='auto';track.scrollLeft+=om.getBoundingClientRect().left-track.getBoundingClientRect().left;track.style.scrollBehavior=sb}}
+    navState();
     paint();
 
     // Compact mode (home villa cards): one month at a time, view only, always 6 week rows so cards stay the same height.
@@ -179,6 +190,7 @@
       }
       prev.addEventListener('click',function(){if(cur>0){cur--;draw()}});
       next.addEventListener('click',function(){if(cur<months.length-1){cur++;draw()}});
+      if(openAt){var oc=(openAt.getUTCFullYear()-first.getUTCFullYear())*12+openAt.getUTCMonth()-first.getUTCMonth();if(oc>0&&oc<months.length)cur=oc}
       draw();
     }
   }
