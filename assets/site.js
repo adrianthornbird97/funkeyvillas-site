@@ -98,13 +98,13 @@
     function place(){if(!cur)return;var r=cur.getBoundingClientRect(),pw=pop.offsetWidth,ph=pop.offsetHeight,vw=d.documentElement.clientWidth,vh=window.innerHeight,m=12;
       var top=r.bottom+8;if(top+ph>vh-m&&r.top-8-ph>m)top=r.top-8-ph;
       var left=Math.min(Math.max(m,r.left),vw-pw-m);pop.style.top=Math.max(m,top)+'px';pop.style.left=Math.max(m,left)+'px'}
-    function links(){return [].slice.call(pop.querySelectorAll('[role=menuitem]'))}
+    function shareItems(){return [].slice.call(pop.querySelectorAll('[role=menuitem]'))}
     function closePop(focus){if(!cur)return;pop.hidden=true;cur.setAttribute('aria-expanded','false');if(focus)cur.focus();cur=null}
     function openPop(btn){var u=sUrl(btn);
       pop.innerHTML='<p class="share-h">Share this page</p>'+items(u).map(function(it){return '<a role="menuitem" href="'+it[2].replace(/"/g,'&quot;')+'"'+(it[0]==='mail'?'':' target="_blank" rel="noopener noreferrer"')+'>'+IC[it[0]]+'<span>'+it[1]+'</span></a>'}).join('')+
         '<button type="button" role="menuitem" class="share-copy">'+IC.link+'<span>Copy link</span></button><span class="sr-only" aria-live="polite"></span>';
-      cur=btn;btn.setAttribute('aria-expanded','true');btn.setAttribute('aria-controls','share-pop');pop.hidden=false;place();links()[0].focus();
-      links().forEach(function(a){if(a.tagName==='A')a.addEventListener('click',function(){setTimeout(function(){closePop(false)},0)})});
+      cur=btn;btn.setAttribute('aria-expanded','true');btn.setAttribute('aria-controls','share-pop');pop.hidden=false;place();shareItems()[0].focus();
+      shareItems().forEach(function(a){if(a.tagName==='A')a.addEventListener('click',function(){setTimeout(function(){closePop(false)},0)})});
       var cp=pop.querySelector('.share-copy');cp.addEventListener('click',function(){
         function done(){cp.classList.add('ok');cp.innerHTML=IC.ok+'<span>Link copied</span>';pop.querySelector('[aria-live]').textContent='Link copied to clipboard';setTimeout(function(){closePop(true)},1400)}
         function legacy(){var t=d.createElement('textarea');t.value=u;t.setAttribute('readonly','');t.style.cssText='position:fixed;top:0;left:0;opacity:0';b.appendChild(t);t.select();try{d.execCommand('copy');done()}catch(_){window.prompt('Copy this link:',u)}t.remove();cp.focus()}
@@ -113,7 +113,7 @@
       if(navigator.share){navigator.share({title:sTitle,text:sText,url:sUrl(btn)}).catch(function(){});return}
       if(cur===btn)closePop(true);else{closePop(false);openPop(btn)}})});
     d.addEventListener('click',function(e){if(cur&&!pop.contains(e.target))closePop(false)});
-    pop.addEventListener('keydown',function(e){var l=links(),i=l.indexOf(d.activeElement);
+    pop.addEventListener('keydown',function(e){var l=shareItems(),i=l.indexOf(d.activeElement);
       if(e.key==='Escape'){e.preventDefault();closePop(true)}
       else if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();l[(i+(e.key==='ArrowDown'?1:-1)+l.length)%l.length].focus()}
       else if(e.key==='Home'||e.key==='End'){e.preventDefault();l[e.key==='Home'?0:l.length-1].focus()}
