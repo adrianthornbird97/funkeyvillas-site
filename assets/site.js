@@ -121,5 +121,36 @@
     d.addEventListener('keydown',function(e){if(e.key==='Escape'&&cur)closePop(true)});
     window.addEventListener('resize',place);window.addEventListener('scroll',place,{passive:true});
   }
+
+  // Hero loops: muted autoplay only when motion is allowed; sources load lazily
+  var reduceMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function startHeroLoops(){
+    if(reduceMotion)return;
+    d.querySelectorAll('video.hero-loop[data-src-mp4]').forEach(function(v){
+      if(v.dataset.ready)return;
+      if(v.dataset.srcWebm){var s=d.createElement('source');s.src=v.dataset.srcWebm;s.type='video/webm';v.appendChild(s)}
+      var s=d.createElement('source');s.src=v.dataset.srcMp4;s.type='video/mp4';v.appendChild(s);
+      v.dataset.ready='1';v.muted=true;v.defaultMuted=true;v.playsInline=true;
+      var p=v.play();if(p&&p.catch)p.catch(function(){});
+    });
+  }
+  if(!reduceMotion){
+    if('requestIdleCallback' in window)requestIdleCallback(startHeroLoops,{timeout:1200});
+    else window.addEventListener('load',startHeroLoops);
+  }
+  // Walkthrough lightbox (sound on — opened by a user click)
+  var vbtns=[].slice.call(d.querySelectorAll('[data-open-video]'));
+  if(vbtns.length){
+    var vlb=d.createElement('div');vlb.className='vlb';vlb.setAttribute('role','dialog');vlb.setAttribute('aria-modal','true');vlb.setAttribute('aria-label','Villa walkthrough');
+    vlb.innerHTML='<div class="vlb-frame"><video controls playsinline preload="metadata"></video><button class="vlb-close" type="button" aria-label="Close walkthrough">&times;</button></div>';
+    b.appendChild(vlb);
+    var vv=vlb.querySelector('video'),vc=vlb.querySelector('.vlb-close'),vlast=null;
+    function vclose(){vlb.classList.remove('open');b.style.overflow='';vv.pause();vv.removeAttribute('src');vv.load();if(vlast)vlast.focus()}
+    function vopen(src,title){vlast=d.activeElement;if(title)vlb.setAttribute('aria-label',title);vv.src=src;vlb.classList.add('open');b.style.overflow='hidden';var p=vv.play();if(p&&p.catch)p.catch(function(){});vc.focus()}
+    vbtns.forEach(function(btn){btn.addEventListener('click',function(){vopen(btn.dataset.openVideo,btn.dataset.videoTitle||'')})});
+    vc.onclick=vclose;
+    vlb.addEventListener('click',function(e){if(e.target===vlb)vclose()});
+    d.addEventListener('keydown',function(e){if(!vlb.classList.contains('open'))return;if(e.key==='Escape'){e.preventDefault();vclose()}if(e.key==='Tab'){e.preventDefault();vc.focus()}});
+  }
   var y=d.getElementById('year');if(y)y.textContent=new Date().getFullYear();
 })();
