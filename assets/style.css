@@ -492,3 +492,27 @@ main{overflow-x:clip}
 .vlb-close{position:absolute;top:12px;right:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.25);color:#fff;width:52px;height:52px;border-radius:50%;cursor:pointer;font-size:1.4rem;display:grid;place-items:center;transition:background .2s;z-index:2}
 .vlb-close:hover{background:rgba(255,255,255,.2)}
 @media (max-width:600px){.vlb{padding:12px}.vlb-close{top:8px;right:8px;width:44px;height:44px}}
+
+/* Home: compact villa page buttons under the book bar */
+.villa-picks{padding-top:clamp(36px,5vw,56px);padding-bottom:0}
+.villa-picks .section-head{margin-bottom:1.25rem;align-items:flex-end}
+.villa-picks h2{font-size:clamp(1.55rem,2.6vw,2.15rem);margin:0}
+.villa-pick-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
+.villa-pick{display:flex;flex-direction:column;background:#fff;border-radius:var(--r);overflow:hidden;text-decoration:none;color:inherit;box-shadow:0 1px 0 var(--line),0 0 0 1px var(--line);transition:box-shadow .35s var(--ease),transform .35s var(--ease);min-height:44px}
+.villa-pick:hover{box-shadow:var(--shadow);transform:translateY(-3px)}
+.villa-pick:focus-visible{outline:2px solid var(--navy);outline-offset:3px}
+.villa-pick-media{display:block;aspect-ratio:4/3;overflow:hidden;background:var(--sand-2)}
+.villa-pick-media img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 1.2s var(--ease)}
+.villa-pick:hover img{transform:scale(1.05)}
+.villa-pick-body{display:block;padding:14px 14px 16px}
+.villa-pick-body strong{display:block;font-family:var(--serif);font-weight:500;font-size:1.15rem;color:var(--navy-dd);line-height:1.2}
+.villa-pick-body span{display:block;margin-top:.3rem;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--grey);font-weight:500;white-space:nowrap}
+@media (max-width:1100px){.villa-pick-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:700px){
+  .villa-pick-grid{grid-template-columns:1fr;gap:10px}
+  .villa-pick{flex-direction:row;align-items:stretch}
+  .villa-pick-media{width:96px;flex:none;aspect-ratio:1}
+  .villa-pick-body{padding:12px 14px;display:flex;flex-direction:column;justify-content:center}
+  .villa-pick-body strong{font-size:1.2rem}
+}
+@media (prefers-reduced-motion:reduce){.villa-pick:hover{transform:none}.villa-pick:hover img{transform:none}}
