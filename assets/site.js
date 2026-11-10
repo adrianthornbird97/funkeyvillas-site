@@ -152,5 +152,20 @@
     vlb.addEventListener('click',function(e){if(e.target===vlb)vclose()});
     d.addEventListener('keydown',function(e){if(!vlb.classList.contains('open'))return;if(e.key==='Escape'){e.preventDefault();vclose()}if(e.key==='Tab'){e.preventDefault();vc.focus()}});
   }
+
+  // Reels lightbox: tap a poster, play muted with controls so the guest can unmute
+  var rbtns=[].slice.call(d.querySelectorAll('[data-open-reel]'));
+  if(rbtns.length){
+    var rlb=d.createElement('div');rlb.className='rlb';rlb.setAttribute('role','dialog');rlb.setAttribute('aria-modal','true');rlb.setAttribute('aria-label','Villa reel');
+    rlb.innerHTML='<div class="rlb-frame"><video controls playsinline preload="none" muted></video><button class="vlb-close" type="button" aria-label="Close reel">&times;</button><p class="rlb-hint">Starts muted — use the control to turn the sound on.</p></div>';
+    b.appendChild(rlb);
+    var rv=rlb.querySelector('video'),rc=rlb.querySelector('.vlb-close'),rlast=null;
+    function rclose(){rlb.classList.remove('open');b.style.overflow='';rv.pause();rv.removeAttribute('src');rv.load();if(rlast)rlast.focus()}
+    function ropen(src,title){rlast=d.activeElement;if(title)rlb.setAttribute('aria-label',title);rv.muted=true;rv.defaultMuted=true;rv.src=src;rlb.classList.add('open');b.style.overflow='hidden';var p=rv.play();if(p&&p.catch)p.catch(function(){});rc.focus()}
+    rbtns.forEach(function(btn){btn.addEventListener('click',function(){ropen(btn.dataset.openReel,btn.dataset.reelTitle||'Villa reel')})});
+    rc.onclick=rclose;
+    rlb.addEventListener('click',function(e){if(e.target===rlb)rclose()});
+    d.addEventListener('keydown',function(e){if(!rlb.classList.contains('open'))return;if(e.key==='Escape'){e.preventDefault();rclose()}if(e.key==='Tab'){e.preventDefault();rc.focus()}});
+  }
   var y=d.getElementById('year');if(y)y.textContent=new Date().getFullYear();
 })();
