@@ -153,15 +153,36 @@
     d.addEventListener('keydown',function(e){if(!vlb.classList.contains('open'))return;if(e.key==='Escape'){e.preventDefault();vclose()}if(e.key==='Tab'){e.preventDefault();vc.focus()}});
   }
 
-  // Reels lightbox: tap a poster, play muted with controls so the guest can unmute
+  // Reels lightbox: tap a poster, play with sound on (the tap is a user gesture). Native controls keep a mute button. If unmuted play() is rejected, fall back to muted + hint.
   var rbtns=[].slice.call(d.querySelectorAll('[data-open-reel]'));
   if(rbtns.length){
     var rlb=d.createElement('div');rlb.className='rlb';rlb.setAttribute('role','dialog');rlb.setAttribute('aria-modal','true');rlb.setAttribute('aria-label','Villa reel');
-    rlb.innerHTML='<div class="rlb-frame"><video controls playsinline preload="none" muted></video><button class="vlb-close" type="button" aria-label="Close reel">&times;</button><p class="rlb-hint">Starts muted — use the control to turn the sound on.</p></div>';
+    rlb.innerHTML='<div class="rlb-frame"><video controls playsinline preload="none"></video><button class="vlb-close" type="button" aria-label="Close reel">&times;</button><p class="rlb-hint" hidden>Sound was blocked — use the control to turn it on.</p></div>';
     b.appendChild(rlb);
-    var rv=rlb.querySelector('video'),rc=rlb.querySelector('.vlb-close'),rlast=null;
-    function rclose(){rlb.classList.remove('open');b.style.overflow='';rv.pause();rv.removeAttribute('src');rv.load();if(rlast)rlast.focus()}
-    function ropen(src,title){rlast=d.activeElement;if(title)rlb.setAttribute('aria-label',title);rv.muted=true;rv.defaultMuted=true;rv.src=src;rlb.classList.add('open');b.style.overflow='hidden';var p=rv.play();if(p&&p.catch)p.catch(function(){});rc.focus()}
+    var rv=rlb.querySelector('video'),rc=rlb.querySelector('.vlb-close'),rh=rlb.querySelector('.rlb-hint'),rlast=null;
+    function rclose(){rlb.classList.remove('open');b.style.overflow='';rv.pause();rv.removeAttribute('src');rv.load();if(rh)rh.hidden=true;if(rlast)rlast.focus()}
+    function ropen(src,title){
+      rlast=d.activeElement;
+      if(title)rlb.setAttribute('aria-label',title);
+      if(rh)rh.hidden=true;
+      rv.muted=false;
+      rv.defaultMuted=false;
+      rv.removeAttribute('muted');
+      rv.src=src;
+      rlb.classList.add('open');
+      b.style.overflow='hidden';
+      var p=rv.play();
+      if(p&&p.catch)p.catch(function(err){
+        if(err&&err.name==='NotAllowedError'){
+          rv.muted=true;
+          rv.defaultMuted=true;
+          if(rh)rh.hidden=false;
+          var p2=rv.play();
+          if(p2&&p2.catch)p2.catch(function(){});
+        }
+      });
+      rc.focus();
+    }
     rbtns.forEach(function(btn){btn.addEventListener('click',function(){ropen(btn.dataset.openReel,btn.dataset.reelTitle||'Villa reel')})});
     rc.onclick=rclose;
     rlb.addEventListener('click',function(e){if(e.target===rlb)rclose()});
