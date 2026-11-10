@@ -154,17 +154,60 @@
   }
 
   // Reels lightbox: tap a poster, play with sound on (the tap is a user gesture). Native controls keep a mute button. If unmuted play() is rejected, fall back to muted + hint.
+  // Share: deep link (#reel-N) via navigator.share, or a fallback menu (WhatsApp, Facebook, X, copy link).
   var rbtns=[].slice.call(d.querySelectorAll('[data-open-reel]'));
+  var SHARE_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>';
+  var shareMenu=null,shareToast=null,shareHideTimer=null,currentReel=null;
+  function villaOf(el){var sec=el&&el.closest?el.closest('.reels-section'):null;return (sec&&sec.getAttribute('data-villa-name'))||'Funkey Villas'}
+  function reelShareUrl(id){var canon=d.querySelector('link[rel="canonical"]');var base=canon&&canon.href?canon.href:(location.origin+location.pathname);return base.split('#')[0]+'#'+id}
+  function sharePayload(id,title,villa){return {id:id,url:reelShareUrl(id),title:villa+' | Funkey Villas',text:(title?title+' — ':'')+'a short film of '+villa+'.'}}
+  function showShareToast(){
+    if(!shareToast){shareToast=d.createElement('div');shareToast.className='reel-share-toast';shareToast.setAttribute('role','status');shareToast.textContent='Link copied';b.appendChild(shareToast)}
+    shareToast.classList.add('show');clearTimeout(shareHideTimer);shareHideTimer=setTimeout(function(){shareToast.classList.remove('show')},2200);
+  }
+  function fallbackCopy(url,done){var t=d.createElement('input');t.value=url;t.setAttribute('readonly','');t.style.cssText='position:fixed;left:-9999px';b.appendChild(t);t.select();try{d.execCommand('copy')}catch(e){}t.remove();if(done)done()}
+  function copyShareLink(url){if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(showShareToast,function(){fallbackCopy(url,showShareToast)})}else fallbackCopy(url,showShareToast)}
+  function closeShareMenu(){if(shareMenu){shareMenu.hidden=true;shareMenu.setAttribute('aria-hidden','true')}}
+  function placeShareMenu(anchor){
+    var r=anchor.getBoundingClientRect(),mw=shareMenu.offsetWidth,mh=shareMenu.offsetHeight,gap=8;
+    var left=r.right-mw;if(left<8)left=8;if(left+mw>window.innerWidth-8)left=Math.max(8,window.innerWidth-8-mw);
+    var top=r.bottom+gap;if(top+mh>window.innerHeight-8&&r.top-gap-mh>8)top=r.top-gap-mh;
+    shareMenu.style.left=Math.round(left)+'px';shareMenu.style.top=Math.round(top)+'px';
+  }
+  function openShareMenu(anchor,payload){
+    if(!shareMenu){
+      shareMenu=d.createElement('div');shareMenu.className='reel-share-menu';shareMenu.setAttribute('role','menu');
+      shareMenu.innerHTML='<a role="menuitem" data-share="whatsapp" target="_blank" rel="noopener noreferrer">WhatsApp</a><a role="menuitem" data-share="facebook" target="_blank" rel="noopener noreferrer">Facebook</a><a role="menuitem" data-share="x" target="_blank" rel="noopener noreferrer">X</a><button type="button" role="menuitem" data-share="copy">Copy link</button>';
+      b.appendChild(shareMenu);
+      shareMenu.addEventListener('click',function(e){var t=e.target.closest('[data-share]');if(!t)return;var p=shareMenu._payload;if(!p)return;if(t.getAttribute('data-share')==='copy'){e.preventDefault();copyShareLink(p.url)}closeShareMenu()});
+    }
+    shareMenu._payload=payload;
+    shareMenu.querySelector('[data-share="whatsapp"]').href='https://wa.me/?text='+encodeURIComponent(payload.text+' '+payload.url);
+    shareMenu.querySelector('[data-share="facebook"]').href='https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(payload.url);
+    shareMenu.querySelector('[data-share="x"]').href='https://twitter.com/intent/tweet?text='+encodeURIComponent(payload.text)+'&url='+encodeURIComponent(payload.url);
+    shareMenu.hidden=false;shareMenu.setAttribute('aria-hidden','false');placeShareMenu(anchor);
+  }
+  function startShare(anchor,payload){
+    closeShareMenu();
+    if(typeof navigator.share==='function'){
+      var req={title:payload.title,text:payload.text,url:payload.url};
+      if(typeof navigator.canShare==='function'&&!navigator.canShare(req)){openShareMenu(anchor,payload);return}
+      navigator.share(req).catch(function(err){if(err&&err.name==='AbortError')return;openShareMenu(anchor,payload)});
+      return;
+    }
+    openShareMenu(anchor,payload);
+  }
   if(rbtns.length){
     var rlb=d.createElement('div');rlb.className='rlb';rlb.setAttribute('role','dialog');rlb.setAttribute('aria-modal','true');rlb.setAttribute('aria-label','Villa reel');
-    rlb.innerHTML='<div class="rlb-frame"><video controls playsinline preload="none"></video><button class="vlb-close" type="button" aria-label="Close reel">&times;</button><p class="rlb-hint" hidden>Sound was blocked — use the control to turn it on.</p></div>';
+    rlb.innerHTML='<div class="rlb-frame"><video controls playsinline preload="none"></video><button class="reel-share rlb-share" type="button" aria-label="Share this video">'+SHARE_ICON+'</button><button class="vlb-close" type="button" aria-label="Close reel">&times;</button><p class="rlb-hint" hidden>Sound was blocked — use the control to turn it on.</p></div>';
     b.appendChild(rlb);
-    var rv=rlb.querySelector('video'),rc=rlb.querySelector('.vlb-close'),rh=rlb.querySelector('.rlb-hint'),rlast=null;
-    function rclose(){rlb.classList.remove('open');b.style.overflow='';rv.pause();rv.removeAttribute('src');rv.load();if(rh)rh.hidden=true;if(rlast)rlast.focus()}
-    function ropen(src,title){
+    var rv=rlb.querySelector('video'),rc=rlb.querySelector('.vlb-close'),rh=rlb.querySelector('.rlb-hint'),rs=rlb.querySelector('.rlb-share'),rlast=null;
+    function rclose(){closeShareMenu();rlb.classList.remove('open');b.style.overflow='';rv.pause();rv.removeAttribute('src');rv.load();if(rh)rh.hidden=true;currentReel=null;if(rlast)rlast.focus()}
+    function ropen(src,title,meta){
       rlast=d.activeElement;
       if(title)rlb.setAttribute('aria-label',title);
       if(rh)rh.hidden=true;
+      currentReel=meta||null;
       rv.muted=false;
       rv.defaultMuted=false;
       rv.removeAttribute('muted');
@@ -183,10 +226,45 @@
       });
       rc.focus();
     }
-    rbtns.forEach(function(btn){btn.addEventListener('click',function(){ropen(btn.dataset.openReel,btn.dataset.reelTitle||'Villa reel')})});
+    function metaFromTile(btn){var item=btn.closest('.reel-item');return {id:item&&item.id?item.id:'',title:btn.dataset.reelTitle||'Villa reel',villa:villaOf(btn),src:btn.dataset.openReel}}
+    rbtns.forEach(function(btn){btn.addEventListener('click',function(){ropen(btn.dataset.openReel,btn.dataset.reelTitle||'Villa reel',metaFromTile(btn))})});
+    d.querySelectorAll('[data-share-reel]').forEach(function(btn){
+      btn.addEventListener('click',function(e){
+        e.preventDefault();e.stopPropagation();
+        var id=btn.getAttribute('data-share-reel');
+        var item=d.getElementById(id);
+        var tile=item?item.querySelector('[data-open-reel]'):null;
+        var title=tile&&tile.dataset.reelTitle?tile.dataset.reelTitle:'Villa reel';
+        startShare(btn,sharePayload(id,title,villaOf(btn)));
+      });
+    });
+    rs.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();if(!currentReel||!currentReel.id)return;startShare(rs,sharePayload(currentReel.id,currentReel.title,currentReel.villa))});
     rc.onclick=rclose;
     rlb.addEventListener('click',function(e){if(e.target===rlb)rclose()});
-    d.addEventListener('keydown',function(e){if(!rlb.classList.contains('open'))return;if(e.key==='Escape'){e.preventDefault();rclose()}if(e.key==='Tab'){e.preventDefault();rc.focus()}});
+    d.addEventListener('keydown',function(e){
+      if(shareMenu&&!shareMenu.hidden){if(e.key==='Escape'){e.preventDefault();closeShareMenu();return}}
+      if(!rlb.classList.contains('open'))return;
+      if(e.key==='Escape'){e.preventDefault();rclose()}
+      if(e.key==='Tab'){e.preventDefault();var f=[rs,rc],i=f.indexOf(d.activeElement);f[e.shiftKey?(i<=0?f.length-1:i-1):(i===f.length-1||i<0?0:i+1)].focus()}
+    });
+    d.addEventListener('click',function(e){
+      if(!shareMenu||shareMenu.hidden)return;
+      if(shareMenu.contains(e.target))return;
+      if(e.target.closest&&(e.target.closest('[data-share-reel]')||e.target.closest('.rlb-share')))return;
+      closeShareMenu();
+    });
+    window.addEventListener('resize',closeShareMenu);
+    window.addEventListener('scroll',closeShareMenu,{passive:true});
+    function openFromHash(){
+      var id=(location.hash||'').replace(/^#/,'');
+      if(!/^reel-\d+$/.test(id))return;
+      var item=d.getElementById(id);if(!item)return;
+      var btn=item.querySelector('[data-open-reel]');if(!btn)return;
+      item.scrollIntoView({block:'center',inline:'center'});
+      ropen(btn.dataset.openReel,btn.dataset.reelTitle||'Villa reel',metaFromTile(btn));
+    }
+    if(location.hash)openFromHash();
+    window.addEventListener('hashchange',openFromHash);
   }
   var y=d.getElementById('year');if(y)y.textContent=new Date().getFullYear();
 })();
